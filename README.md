@@ -11,7 +11,7 @@ A Python command-line tool to query Security Groups in AWS accounts and easily s
   + Port scanning is available through Python socket and Nmap (python-nmap)
   + Nmap port scanning requires running this tool using root privilege 
 + Listing security groups attached to specific EC2 instance
-+ Generating detailed XLSX reports per region that include:
++ Generating detailed XLSX reports per region that include: [Sample XLSX Report](https://github.com/SherifTalaat/AWS-SG-Analyzer/blob/b35ce776d57ac3284167c4081ae88cbf452fedb9/Sample%20Report.xlsx)
   + Summary of the security groups in the region
     + SG Name
     + SG ID
