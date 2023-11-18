@@ -34,7 +34,7 @@ A Python command-line tool to query Security Groups in AWS accounts and easily s
 # Installation
 
 ## Prerequisites
-1. Ensure you have Python 3.10 installed.
+1. Ensure you have Python 3.7 (or higher) installed.
 2. Ensure you have ~/.aws/credentials file configured with a valid region, Access Key ID, and Secret Access Key
 
 ## Steps
