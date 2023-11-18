@@ -1,5 +1,5 @@
 # AWS Security Group Analyzer
-A Python command-line tool to query Security Groups in AWS accounts and easily spot (and take a decision on) stale, risky, and misconfigured security groups.
+A Python command-line tool to query Security Groups in AWS accounts and easily spot (and decide on) stale, risky, and misconfigured security groups.
 
 ## Features
 + Interactive menu to navigate through different options
@@ -41,16 +41,17 @@ A Python command-line tool to query Security Groups in AWS accounts and easily s
 1. Clone this repository
 
 ```
-git clone https://github.com/sheriftalaat/xxx.git
-cd xxx
+git clone https://github.com/SherifTalaat/AWS-SG-Analyzer.git
+cd AWS-SG-Analyzer
 ```
 
 2. Install the required packages: ```pip install -r requirements.txt```
-. 
 
 ## Usage
 Running the tool:
-```python xxx.py```
+```python aws_sg_analyzer.py```
+
+
 
 # Contributions
 Contributions are always welcome! Please open an issue or submit a pull request.
