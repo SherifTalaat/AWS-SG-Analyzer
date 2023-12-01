@@ -742,8 +742,9 @@ def main_action_menu():
         instances = get_ec2_associated_to_SG(
             boto3.client('ec2', region_name=allRegions[selectedRegion]).describe_instances()['Reservations'],
             sgList[selectedSG][1])
-        print("%d EC2 instances found attached to Security Group %s" % (len(instances), sgList[selectedSG][1]))
+        
         if len(instances) > 0:
+            print("%d EC2 instances found attached to Security Group %s" % (len(instances), sgList[selectedSG][1]))
             for instance_id in instances:
                 print("%s (%s)" % (get_ec2_instance_name_by_id(instance_id, allRegions[selectedRegion]), instance_id))
         else:
