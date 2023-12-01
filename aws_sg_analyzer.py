@@ -854,11 +854,11 @@ def main_action_menu():
         instances = ec2_client.describe_instances()['Reservations']
 
         if len(instances) > 0:
-            print(bColors.BrightGreen + "Loading EC2 Instances in Region..." + bColors.ENDC)
             counter = 0
             allInstances = []
             for ins in instances:
                 if ins['Instances'][0]['State']['Name'] != 'terminated':
+                    print(bColors.BrightGreen + "Loading EC2 Instances in Region..." + bColors.ENDC)
                     allInstances.append(ins['Instances'][0]['InstanceId'])
                     print("\n%d. %s (%s)" % (counter, get_ec2_instance_name_by_id(ins['Instances'][0]['InstanceId'], allRegions[selectedRegion]) , ins['Instances'][0]['InstanceId']))
                     counter += 1
