@@ -727,12 +727,12 @@ def main_action_menu():
         selectedRegion = int(input(bColors.Magenta + "\nPlease select AWS region from the list:" + bColors.ENDC))
         print(bColors.Magenta + "\nRegion: %s" % allRegions[selectedRegion] + bColors.ENDC)
 
-        with yaspin(text=f"Loading Security Groups in {allRegions[selectedRegion]}", color="blue") as spinner:
+        with yaspin(text=f"Loading Security Groups in {allRegions[selectedRegion]}\n", color="blue") as spinner:
             spinner.start()
             sgList = get_ec2_security_groups_by_region(allRegions[selectedRegion])
             counter = 0
             for sg in sgList:
-                print("\n%d. %s (%s)" % (counter, sg[0], sg[1]))
+                print("%d. %s (%s)" % (counter, sg[0], sg[1]))
                 counter += 1
             spinner.stop()
 
@@ -771,12 +771,12 @@ def main_action_menu():
         selectedRegion = int(input(bColors.Magenta + "\nPlease select AWS region from the list:" + bColors.ENDC))
         print(bColors.Magenta + "\nRegion: %s" % allRegions[selectedRegion] + bColors.ENDC)
 
-        with yaspin(text=f"Loading Security Groups in {allRegions[selectedRegion]}", color="blue") as spinner:
+        with yaspin(text=f"Loading Security Groups in {allRegions[selectedRegion]}\n", color="blue") as spinner:
             spinner.start()
             sgList = get_ec2_security_groups_by_region(allRegions[selectedRegion])
             counter = 0
             for sg in sgList:
-                print("\n%d. %s (%s)" % (counter, sg[0], sg[1]))
+                print("%d. %s (%s)" % (counter, sg[0], sg[1]))
                 counter += 1
             spinner.stop()
 
