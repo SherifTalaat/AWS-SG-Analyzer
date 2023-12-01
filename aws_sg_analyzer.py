@@ -11,6 +11,7 @@ from yaspin import yaspin
 import socket
 import xlsxwriter
 import nmap
+from simple_term_menu import TerminalMenu
 
 # Ignore Boto3 Python deprecation warning
 boto3.compat.filter_python_deprecation_warnings()
@@ -727,12 +728,12 @@ def main_action_menu():
         selectedRegion = int(input(bColors.Magenta + "\nPlease select AWS region from the list:" + bColors.ENDC))
         print(bColors.Magenta + "\nRegion: %s" % allRegions[selectedRegion] + bColors.ENDC)
 
-        with yaspin(text=f"Loading Security Groups in {allRegions[selectedRegion]}\n", color="blue") as spinner:
+        with yaspin(text=f"Loading Security Groups in {allRegions[selectedRegion]}", color="blue") as spinner:
             spinner.start()
             sgList = get_ec2_security_groups_by_region(allRegions[selectedRegion])
             counter = 0
             for sg in sgList:
-                print("%d. %s (%s)" % (counter, sg[0], sg[1]))
+                print("\n%d. %s (%s)" % (counter, sg[0], sg[1]))
                 counter += 1
             spinner.stop()
 
@@ -740,11 +741,10 @@ def main_action_menu():
         print(bColors.Cyan + "Security Groups ID: %s" % sgList[selectedSG][1] + bColors.ENDC)
         print(bColors.Cyan + "Loading EC2 Instances IDs..." + bColors.ENDC)
         instances = get_ec2_associated_to_SG(
-            boto3.client('ec2', region_name=allRegions[selectedRegion]).describe_instances()['Reservations'],
+            session.client('ec2', region_name=allRegions[selectedRegion]).describe_instances()['Reservations'],
             sgList[selectedSG][1])
-        
+        print("%d EC2 instances found attached to Security Group %s" % (len(instances), sgList[selectedSG][1]))
         if len(instances) > 0:
-            print("%d EC2 instances found attached to Security Group %s" % (len(instances), sgList[selectedSG][1]))
             for instance_id in instances:
                 print("%s (%s)" % (get_ec2_instance_name_by_id(instance_id, allRegions[selectedRegion]), instance_id))
         else:
@@ -771,12 +771,12 @@ def main_action_menu():
         selectedRegion = int(input(bColors.Magenta + "\nPlease select AWS region from the list:" + bColors.ENDC))
         print(bColors.Magenta + "\nRegion: %s" % allRegions[selectedRegion] + bColors.ENDC)
 
-        with yaspin(text=f"Loading Security Groups in {allRegions[selectedRegion]}\n", color="blue") as spinner:
+        with yaspin(text=f"Loading Security Groups in {allRegions[selectedRegion]}", color="blue") as spinner:
             spinner.start()
             sgList = get_ec2_security_groups_by_region(allRegions[selectedRegion])
             counter = 0
             for sg in sgList:
-                print("%d. %s (%s)" % (counter, sg[0], sg[1]))
+                print("\n%d. %s (%s)" % (counter, sg[0], sg[1]))
                 counter += 1
             spinner.stop()
 
@@ -847,23 +847,19 @@ def main_action_menu():
         for region in allRegions:
             print("%d. %s" % (counter, region))
             counter += 1
+
         selectedRegion = int(input(bColors.Magenta + "\nPlease select AWS region from the list:" + bColors.ENDC))
         print(bColors.Magenta + "\nRegion: %s" % allRegions[selectedRegion] + bColors.ENDC)
-
         print(bColors.BrightGreen + "Loading EC2 Instances in Region..." + bColors.ENDC)
-        EC2_RESOURCE = boto3.resource('ec2', region_name=allRegions[selectedRegion])
-        instances = EC2_RESOURCE.instances.all()
-        if instances is None:
+        ec2_client = session.client('ec2', region_name=allRegions[selectedRegion])
+        instances = ec2_client.describe_instances()['Reservations']
+
+        if len(instances) > 0:
             counter = 0
             allInstances = []
-            instanceName = "iName"
-            for instance in instances:
-                allInstances.append(instance.id)
-                for t in instance.tags:
-                    if t['Key'] == 'Name':
-                        instanceName = t['Value']
-
-                print("\n%d. %s (%s)" % (counter, instanceName, instance.id))
+            for ins in instances:
+                allInstances.append(ins['Instances'][0]['InstanceId'])
+                print("\n%d. %s (%s)" % (counter, get_ec2_instance_name_by_id(ins['Instances'][0]['InstanceId'], allRegions[selectedRegion]) , ins['Instances'][0]['InstanceId']))
                 counter += 1
             selectedInstance = int(input(bColors.Magenta + "\nPlease select EC2 from the list:" + bColors.ENDC))
             print(bColors.Cyan + f"Instance ID: {allInstances[selectedInstance]}" + bColors.ENDC)
@@ -897,6 +893,8 @@ def main_action_menu():
                     generate_security_groups_report_by_region(region)
                     spinner.ok(" ✔ ")
 
+            print(bColors.Cyan + f"Reports available @ /{os.getcwd()}/Reports/{aws_session_identity['Account']}/" + bColors.ENDC)
+
             continue_or_exit_menu_option()
 
         elif userSubMenuOption == '2':
@@ -911,10 +909,10 @@ def main_action_menu():
                 spinner.start
                 generate_security_groups_report_by_region(allRegions[selectedRegion])
                 spinner.ok(" ✔ ")
-                end_time = time.time()
-                execution_time = end_time - start_time
-                print("Report Generation Time: " + execution_time)
-                print(f"Reports available @ /{os.getcwd()}/Reports/{aws_session_identity['Account']}/")
+                #end_time = time.time()
+                #execution_time = end_time - start_time
+                #print("Report Generation Time: " + execution_time)
+                print(bColors.Cyan + f"Reports available @ /{os.getcwd()}/Reports/{aws_session_identity['Account']}/" + bColors.ENDC)
 
             continue_or_exit_menu_option()
 
@@ -940,10 +938,11 @@ try:
         selected_profile = 'default'
     elif len(aws_profiles) > 1:
         print(bColors.BOLD + bColors.UNDERLINE + "Available AWS Profiles:" + bColors.ENDC)
-        for profile in aws_profiles:
-            print(f"{profile}")
+        terminal_menu = TerminalMenu(aws_profiles)
+        menu_entry_index = terminal_menu.show()
 
-        selected_profile = input(bColors.Cyan + 'Please type profile name to continue (i.e. default) ->' + bColors.ENDC).strip()
+        print(f"Selected aws profile: {aws_profiles[menu_entry_index]} \n")
+        selected_profile = aws_profiles[menu_entry_index]
 
     default_region = boto3.session.Session(profile_name=selected_profile).region_name
     print(bColors.BrightYellow + f'The default aws region for {selected_profile} profile is {default_region}.')
