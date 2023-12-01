@@ -35,7 +35,8 @@ A Python command-line tool to query Security Groups in AWS accounts and easily s
 
 ## Prerequisites
 1. Ensure you have Python 3.7 (preferably 3.10) installed.
-2. Ensure you have ~/.aws/credentials file configured with a valid region, Access Key ID, and Secret Access Key
+2. Ensure you have nmap installed (required for Nmap port scanning)
+3. Ensure you have ~/.aws/credentials file configured with a valid region, Access Key ID, and Secret Access Key
 
 ## Steps
 1. Clone this repository
