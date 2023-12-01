@@ -816,7 +816,7 @@ def main_action_menu():
         ports = list(dict.fromkeys(ports))
         print(bColors.Cyan + "Loading EC2 Instances IDs..." + bColors.ENDC)
         instances = get_ec2_associated_to_SG(
-            boto3.client('ec2', region_name=allRegions[selectedRegion]).describe_instances()['Reservations'],
+            session.client('ec2', region_name=allRegions[selectedRegion]).describe_instances()['Reservations'],
             sgList[selectedSG][1])
         print("%d EC2 instances found attached to Security Group %s" % (len(instances), sgList[selectedSG][1]))
         if len(instances) > 0:
@@ -858,9 +858,10 @@ def main_action_menu():
             counter = 0
             allInstances = []
             for ins in instances:
-                allInstances.append(ins['Instances'][0]['InstanceId'])
-                print("\n%d. %s (%s)" % (counter, get_ec2_instance_name_by_id(ins['Instances'][0]['InstanceId'], allRegions[selectedRegion]) , ins['Instances'][0]['InstanceId']))
-                counter += 1
+                if ins['Instances'][0]['State']['Name'] != 'terminated':
+                    allInstances.append(ins['Instances'][0]['InstanceId'])
+                    print("\n%d. %s (%s)" % (counter, get_ec2_instance_name_by_id(ins['Instances'][0]['InstanceId'], allRegions[selectedRegion]) , ins['Instances'][0]['InstanceId']))
+                    counter += 1
             selectedInstance = int(input(bColors.Magenta + "\nPlease select EC2 from the list:" + bColors.ENDC))
             print(bColors.Cyan + f"Instance ID: {allInstances[selectedInstance]}" + bColors.ENDC)
             with yaspin(text="Loading Security Groups ...", color="blue") as spinner:
