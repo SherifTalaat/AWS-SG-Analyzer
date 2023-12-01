@@ -872,6 +872,8 @@ def main_action_menu():
                                               tablefmt='grid', maxcolwidths=[30, 30]))
                         spinner.stop()
                 else:
+                    print(
+                        bColors.Cyan + f"No EC2 instances found in {allRegions[selectedRegion]} region." + bColors.ENDC)
                     break
         else:
             print(bColors.Cyan + f"No EC2 instances found in {allRegions[selectedRegion]} region." + bColors.ENDC)
