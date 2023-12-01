@@ -7,4 +7,4 @@ requests-unixsocket==0.1.5
 tabulate==0.8.10
 XlsxWriter==3.1.7
 yaspin==2.1.0
-simple-term-menu=1.6.3
+simple-term-menu==1.6.3
