@@ -850,11 +850,11 @@ def main_action_menu():
 
         selectedRegion = int(input(bColors.Magenta + "\nPlease select AWS region from the list:" + bColors.ENDC))
         print(bColors.Magenta + "\nRegion: %s" % allRegions[selectedRegion] + bColors.ENDC)
-        print(bColors.BrightGreen + "Loading EC2 Instances in Region..." + bColors.ENDC)
         ec2_client = session.client('ec2', region_name=allRegions[selectedRegion])
         instances = ec2_client.describe_instances()['Reservations']
 
         if len(instances) > 0:
+            print(bColors.BrightGreen + "Loading EC2 Instances in Region..." + bColors.ENDC)
             counter = 0
             allInstances = []
             for ins in instances:
@@ -862,15 +862,17 @@ def main_action_menu():
                     allInstances.append(ins['Instances'][0]['InstanceId'])
                     print("\n%d. %s (%s)" % (counter, get_ec2_instance_name_by_id(ins['Instances'][0]['InstanceId'], allRegions[selectedRegion]) , ins['Instances'][0]['InstanceId']))
                     counter += 1
-            selectedInstance = int(input(bColors.Magenta + "\nPlease select EC2 from the list:" + bColors.ENDC))
-            print(bColors.Cyan + f"Instance ID: {allInstances[selectedInstance]}" + bColors.ENDC)
-            with yaspin(text="Loading Security Groups ...", color="blue") as spinner:
-                spinner.start()
-                table = get_SG_attached_to_ec2_instances(allRegions[selectedRegion], allInstances[selectedInstance])
-                print("\n" + tabulate(table,
-                                      headers=["SG Name", "SG ID"],
-                                      tablefmt='grid', maxcolwidths=[30, 30]))
-                spinner.stop()
+                    selectedInstance = int(input(bColors.Magenta + "\nPlease select EC2 from the list:" + bColors.ENDC))
+                    print(bColors.Cyan + f"Instance ID: {allInstances[selectedInstance]}" + bColors.ENDC)
+                    with yaspin(text="Loading Security Groups ...", color="blue") as spinner:
+                        spinner.start()
+                        table = get_SG_attached_to_ec2_instances(allRegions[selectedRegion], allInstances[selectedInstance])
+                        print("\n" + tabulate(table,
+                                              headers=["SG Name", "SG ID"],
+                                              tablefmt='grid', maxcolwidths=[30, 30]))
+                        spinner.stop()
+                else:
+                    break
         else:
             print(bColors.Cyan + f"No EC2 instances found in {allRegions[selectedRegion]} region." + bColors.ENDC)
 
