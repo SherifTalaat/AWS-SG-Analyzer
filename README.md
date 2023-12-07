@@ -30,6 +30,17 @@ A Python command-line tool to query Security Groups in AWS accounts and easily s
       + Redshift
       + OpenSearch
       + Directory Service
+
+![alt text](https://github.com/SherifTalaat/AWS-SG-Analyzer/blob/f72414ceaaf1c8dd9d5682204b99e49912cad488/Images/main%20menu.png "Main Actions Menu")
+
+![alt text](https://github.com/SherifTalaat/AWS-SG-Analyzer/blob/f72414ceaaf1c8dd9d5682204b99e49912cad488/Images/unattached%20security%20groups.png "List Unattaced Security Groups option")
+
+![alt text](https://github.com/SherifTalaat/AWS-SG-Analyzer/blob/f72414ceaaf1c8dd9d5682204b99e49912cad488/Images/EC2%20port%20scanning.png "Attached EC2 instances with port scanning")
+
+![alt text](https://github.com/SherifTalaat/AWS-SG-Analyzer/blob/f72414ceaaf1c8dd9d5682204b99e49912cad488/Images/Report%20Summary.png "Report Summary Page")
+
+![alt text](https://github.com/SherifTalaat/AWS-SG-Analyzer/blob/f72414ceaaf1c8dd9d5682204b99e49912cad488/Images/Report%20-%20SG%20details.png "Report - Security Group Details")
+
      
 # Installation
 
