@@ -73,13 +73,13 @@ def port_scan_nmap(ip, ports):
             for proto in nmScan[host].all_protocols():
                 lport = nmScan[host][proto].keys()
                 for port in lport:
-                    #results.append(f"{proto}/{port}/{nmScan[host][proto][port]['state']}")
+                    results.append(f"{proto}/{port}/{nmScan[host][proto][port]['state']}")
                     if nmScan[host][proto][port]['state'] == 'open':
                         print(bColors.BrightGreen + f"-- Port {proto}/{port} is {nmScan[host][proto][port]['state']}" + bColors.ENDC)
                     else:
                         print(bColors.BrightRed + f"-- Port {proto}/{port} is {nmScan[host][proto][port]['state']}" + bColors.ENDC)
 
-    #return results
+    return results
 
 def get_service_name_by_port_number(portNumber, protocol):
     try:
@@ -567,6 +567,198 @@ def generate_security_groups_report_by_region(region):
                                        , 'style': 'Table Style Light 10'})
     workbook.close()
 
+def generate_security_groups_portscanning_report_by_region(region):
+    # pre-load resources information in region
+    EC2_all = session.client('ec2', region_name=region).describe_instances()['Reservations']
+
+    # Reports folder
+    folder_name = "Reports"
+    if not os.path.exists(f'/{os.getcwd()}/{folder_name}/'):
+        os.makedirs(f'/{os.getcwd()}/{folder_name}/')
+
+    if not os.path.exists(f"/{os.getcwd()}/{folder_name}/{aws_session_identity['Account']}/"):
+        os.makedirs(f"/{os.getcwd()}/{folder_name}/{aws_session_identity['Account']}/")
+
+    # Generating Region Security Groups Summary
+    dt_string = datetime.now().strftime("%d-%m-%YT%H%M%S")
+    workbook = xlsxwriter.Workbook(
+        f"/{os.getcwd()}/{folder_name}/{aws_session_identity['Account']}/" + region +  f'_EC2-Port-Scan {dt_string}' + '.xlsx')
+    worksheet = workbook.add_worksheet()
+    worksheet.name = "Summary"
+
+    cell_format = workbook.add_format()
+    cell_format.set_font_color('#F8F0E3')
+    cell_format.set_fg_color('#003399')
+    cell_format.set_font_size(20)
+
+    worksheet.set_column('A:A', 30)
+    worksheet.set_column('B:B', 20)
+    worksheet.set_column('C:C', 40, workbook.add_format({'text_wrap': True}))
+    worksheet.set_column('D:F', 15, workbook.add_format({'center_across': True}))
+
+    worksheet.merge_range("A1:F1", "Summary", cell_format)
+    worksheet.merge_range("A2:C2",
+                          f"Created by {current_user} for Account ID {aws_session_identity['Account']}",
+                          workbook.add_format({'bold': True, 'font_color': 'black'}))
+
+    # Get Security Group info per region.
+    sgList = get_ec2_security_groups_by_region(region)
+
+    # Summary worksheet
+    if len(sgList) > 0:
+        worksheet.add_table(3, 0, len(sgList) + 3, 5, {'columns': [{'header': 'SG Name'},
+                                                                   {'header': 'SG Id'},
+                                                                   {'header': 'Description'},
+                                                                   {'header': 'Inbound Rules'},
+                                                                   {'header': 'Outbound Rules'},
+                                                                   {'header': 'Associated Resources'}, ]
+            , 'style': 'Table Style Light 10'
+                                                       })
+
+        # Iterate over the data and write it out row by row.
+        row = 5
+        for sg_name, sg_id, desc, inbound, outbound, associatedInterfaces in sgList:
+            worksheet.write_row('A' + str(row), [sg_name, sg_id, desc, inbound, outbound, associatedInterfaces])
+            if len(sg_name) > 31:
+                worksheet.write_url('A' + str(row), f"internal:'{sg_name[:31]}'!A1", string=sg_name)
+            else:
+                worksheet.write_url('A' + str(row), f"internal:'{sg_name}'!A1", string=sg_name)
+            row += 1
+
+    # Generating Security Groups Details
+    for sg in sgList:
+        worksheet_sg = workbook.add_worksheet()
+        if len(sg[0]) > 31:
+            worksheet_sg.name = sg[0][:31]
+        else:
+            worksheet_sg.name = sg[0]
+
+        cell_format = workbook.add_format()
+        cell_format.set_font_color('#F8F0E3')
+        cell_format.set_fg_color('#003399')
+        cell_format.set_font_size(20)
+        worksheet_sg.merge_range("A1:G1", f'{sg[0]} ({sg[1]})', cell_format)
+
+        worksheet_sg.set_column('A:A', 30)
+        worksheet_sg.set_column('B:B', 30, workbook.add_format({'text_wrap': True}))
+        worksheet_sg.set_column('C:C', 20)
+        worksheet_sg.set_column('D:F', 15, workbook.add_format({'center_across': True}))
+        worksheet_sg.set_column('G:G', 30, workbook.add_format({'center_across': True}))
+
+        # Get Security Group Rules Details.
+        rulesInfo = get_security_group_rules(allRegions[allRegions.index(region)], sg[1], IANA_DB)
+
+        # Iterate over the data and write it out row by row.
+        if len(rulesInfo) > 0:
+            worksheet_sg.add_table(2, 0, len(rulesInfo) + 2, 6, {'columns': [{'header': 'SG RuleId'},
+                                                                             {'header': 'Description'},
+                                                                             {'header': 'Traffic Direction'},
+                                                                             {'header': 'Protocol'},
+                                                                             {'header': 'Port'},
+                                                                             {'header': 'Service Name'},
+                                                                             {'header': 'Src/Dst'}, ]
+                , 'style': 'Table Style Light 10'
+                                                                 })
+
+            row = 4
+            for sg_rule_id, traffic_direction, protocol, port, description, service_name, SrcDst in rulesInfo:
+                worksheet_sg.write_row('A' + str(row),
+                                       [sg_rule_id, description, traffic_direction, protocol, port, service_name,
+                                        SrcDst])
+
+                if SrcDst is not None and SrcDst.startswith('sg:'):
+                    SrcDst = SrcDst.split(':')[1]
+                    worksheet_sg.write_url('G' + str(row), f"internal:'{SrcDst}'!A1", string=SrcDst)
+
+                row += 1
+
+        else:
+            cell_format = workbook.add_format()
+            cell_format.set_font_color('#C00000')
+            cell_format.set_fg_color('#FFCC00')
+            cell_format.set_font_size(18)
+
+            row = 3
+            worksheet_sg.merge_range(("A" + str(row) + ":B" + str(row)),
+                                     "No rules found in this Security Group", cell_format)
+            row = 4
+
+        row += 1
+
+        worksheet_sg.merge_range(("A" + str(row) + ":B" + str(row)),
+                                 "EC2 Port Scanning Results", cell_format)
+
+        table_start_row = row + 1
+
+        # Get EC2 Instances associated with the security group
+        instances = get_ec2_associated_to_SG(EC2_all, sg[1])
+        if len(instances) > 0:
+            EC2Instances = []
+            for instance_id in instances:
+                instance_name = get_ec2_instance_name_by_id(instance_id, allRegions[allRegions.index(region)])
+                EC2Instances.append(f"{instance_id} ({instance_name})")
+
+        #############################
+        #############################
+        ports = []
+        NumberOfInboundRulesInSG = 0
+        for rule in rulesInfo:
+            if rule[1] == "Inbound" and rule[3] != "All ports":
+                ports.append(f'{rule[2]}/{rule[3]}')
+
+            if rule[1] == "Inbound":
+                NumberOfInboundRulesInSG += 1
+
+        ports = list(dict.fromkeys(ports))
+
+        print(bColors.Cyan + "Loading EC2 Instances IDs..." + bColors.ENDC)
+        cell_format = workbook.add_format()
+        cell_format.set_align('center')
+        cell_format.set_align('vcenter')
+
+        if NumberOfInboundRulesInSG > 0:
+            #print("\nTotal Number of Inbound Rules (%d) " % len(rulesInfo))
+            if len(instances) > 0:
+                worksheet_sg.write(row, 0, "Instance Name")
+                for i in range(0, len(ports)):
+                    worksheet_sg.write(row, i + 1, ports[i], cell_format)
+                row += 1
+
+                for instance_id in instances:
+                    instanceName = get_ec2_instance_name_by_id(instance_id, region)
+                    instancePublicIP = get_ec2_instance_public_ip_by_id(instance_id, region)
+
+                    print(bColors.BOLD + bColors.Cyan + "\nInstance Name: %s" % instanceName + bColors.ENDC)
+                    print(bColors.BOLD + bColors.Cyan + "Security Group: %s" % sg[0] + bColors.ENDC)
+                    print(bColors.BOLD + bColors.Cyan + "Instance Public IP: %s" % (
+                        instancePublicIP if instancePublicIP is not None else "No Public IP - Instance is turned off") + bColors.ENDC)
+                    if instancePublicIP is not None:
+                        print(bColors.BrightYellow + "Port scanning in progress..." + bColors.ENDC)
+                        #### EC2 Port Scanning Results ####
+                        portScanResults = port_scan_nmap(instancePublicIP, ports)
+                        worksheet_sg.write(row, 0, instanceName )
+                        for i in range(0, len(ports)):
+                            worksheet_sg.write(row, i + 1, portScanResults[i].split('/')[2], cell_format)
+
+                        row += 1
+            else:
+                print(bColors.BrightYellow + f"No EC2 instance found attached to Security Group {sg[0]}" + bColors.ENDC)
+                worksheet_sg.write(row, 0, "No associated EC2 instances to scan")
+        else:
+            print(bColors.BrightYellow + "This security group has no defined inbound rules to evaluate." + bColors.ENDC)
+            worksheet_sg.write(row, 0, "No Inbound rules found to evaluate")
+
+        #############################
+        #############################
+        #############################
+
+        #print(str(table_start_row) + "---" + str(len(instances)+1) + "---" + str(len(ports)+1))
+        #if (row - table_start_row) > 1:
+        # worksheet_sg.add_table(table_start_row - 1, 0, table_start_row+len(instances)+1, len(ports)+1 ,
+        #                           {'style': 'Table Style Light 10'})
+
+    workbook.close()
+
 
 def continue_or_exit_menu_option():
     userOption = input(bColors.Magenta + '''\nEnter (e) to exit or (r) to return to the main menu: ''' + bColors.ENDC)
@@ -732,8 +924,9 @@ def main_action_menu():
             spinner.start()
             sgList = get_ec2_security_groups_by_region(allRegions[selectedRegion])
             counter = 0
+            print("\n")
             for sg in sgList:
-                print("\n%d. %s (%s)" % (counter, sg[0], sg[1]))
+                print("%d. %s (%s) " % (counter, sg[0], sg[1]))
                 counter += 1
             spinner.stop()
 
@@ -775,8 +968,9 @@ def main_action_menu():
             spinner.start()
             sgList = get_ec2_security_groups_by_region(allRegions[selectedRegion])
             counter = 0
+            print("\n")
             for sg in sgList:
-                print("\n%d. %s (%s)" % (counter, sg[0], sg[1]))
+                print("%d. %s (%s)" % (counter, sg[0], sg[1]))
                 counter += 1
             spinner.stop()
 
@@ -786,7 +980,6 @@ def main_action_menu():
         ports = []
         with yaspin(text="Loading Security Groups Rules...", color="blue") as spinner:
             spinner.start()
-
             for rule in rulesInfo:
                 if rule[1] == "Inbound" and rule[3] != "All ports":
                     ports.append(f'{rule[2]}/{rule[3]}')
@@ -856,11 +1049,12 @@ def main_action_menu():
         if len(instances) > 0:
             counter = 0
             allInstances = []
+            print("\n")
             for ins in instances:
                 if ins['Instances'][0]['State']['Name'] != 'terminated':
                     print(bColors.BrightGreen + "Loading EC2 Instances in Region..." + bColors.ENDC)
                     allInstances.append(ins['Instances'][0]['InstanceId'])
-                    print("\n%d. %s (%s)" % (counter, get_ec2_instance_name_by_id(ins['Instances'][0]['InstanceId'], allRegions[selectedRegion]) , ins['Instances'][0]['InstanceId']))
+                    print("%d. %s (%s)" % (counter, get_ec2_instance_name_by_id(ins['Instances'][0]['InstanceId'], allRegions[selectedRegion]) , ins['Instances'][0]['InstanceId']))
                     counter += 1
                     selectedInstance = int(input(bColors.Magenta + "\nPlease select EC2 from the list:" + bColors.ENDC))
                     print(bColors.Cyan + f"Instance ID: {allInstances[selectedInstance]}" + bColors.ENDC)
@@ -886,6 +1080,7 @@ def main_action_menu():
         userSubMenuOption = input(bColors.Magenta + '''
     (1) Generate report for all enabled AWS regions.
     (2) Generate report for specific AWS region.
+    (3) Generate EC2 Port Scanning report for specific AWS region.
     (r) Return to the main menu.
 
     Option >>> ''' + bColors.ENDC)
@@ -920,6 +1115,18 @@ def main_action_menu():
                 print(bColors.Cyan + f"Reports available @ /{os.getcwd()}/Reports/{aws_session_identity['Account']}/" + bColors.ENDC)
 
             continue_or_exit_menu_option()
+
+        elif userSubMenuOption == '3':
+            print(bColors.BrightGreen + "Loading AWS Regions..." + bColors.ENDC)
+            counter = 0
+            for region in allRegions:
+                print("%d. %s" % (counter, region))
+                counter += 1
+            selectedRegion = int(input(bColors.Magenta + "\nPlease select AWS region from the list:" + bColors.ENDC))
+            start_time = time.time()
+            print(f"Generating report for {allRegions[selectedRegion]}")
+            generate_security_groups_portscanning_report_by_region(allRegions[selectedRegion])
+            print(bColors.Cyan + f"Reports available @ /{os.getcwd()}/Reports/{aws_session_identity['Account']}/" + bColors.ENDC)
 
         elif userSubMenuOption == 'r':
             main_action_menu()
@@ -992,4 +1199,3 @@ try:
 
 except ClientError as err:
     print(bColors.BrightRed + "Unexpected error: %s" % err + bColors.ENDC)
-
