@@ -41,6 +41,9 @@ A Python command-line tool to query Security Groups in AWS accounts and easily s
 
 ![alt text](https://github.com/SherifTalaat/AWS-SG-Analyzer/blob/f72414ceaaf1c8dd9d5682204b99e49912cad488/Images/Report%20-%20SG%20details.png "Report - Security Group Details")
 
+![alt text](https://github.com/SherifTalaat/AWS-SG-Analyzer/blob/e012ad3e91e0f3ea4b89a6a4a2c2c85a1b68b90e/Images/Report%20Port%20Scan.png "Report - EC2 Port Scan Results")
+
+
      
 # Installation
 
