@@ -1,6 +1,12 @@
 # AWS Security Group Analyzer
 A Python command-line tool to query Security Groups in AWS accounts and easily spot (and decide on) stale, risky, and misconfigured security groups.
 
+AWS security groups are virtual firewalls that control the inbound and outbound traffic for EC2 instances and other AWS resources. They are essential for ensuring the security and compliance of cloud environments. However, if they are not configured properly, they can expose sensitive data, allow unauthorized access, and compromise the integrity of the cloud infrastructure. Misconfigured security groups can result from human errors, lack of visibility, or insufficient policies and procedures. 
+
+Therefore, it is important to follow the best practices for managing and auditing security groups, such as using descriptive names and tags, applying the principle of least privilege, reviewing and updating rules regularly, and using automation tools and services.
+
+AWS Trusted Advisor will warn you about risky security groups, but it doesn’t give full visibility to take quick actions. You will have to dive deeper into configurations and move between consoles to get all the needed information. And here comes the benefit of AWS Security Groups Analyzer, it helps you gather all the needed information about the security groups to accelerate the right decision. It will tell you about stale/unused security groups, AWS resources associated with security groups, security groups with no rules. Also, it takes it to the next level and runs a port scanning against associated EC2 instance to verify the open/closed ports before changing any rule.
+
 ## Features
 + Interactive menu to navigate through different options
 + Listing all security group(s) details, including SG Name, SG ID, Description Inbound Rules, Outbound Rules, and Number of associated Interfaces/resources
