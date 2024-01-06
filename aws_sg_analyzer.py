@@ -711,7 +711,7 @@ def generate_security_groups_portscanning_report_by_region(region):
 
         ports = list(dict.fromkeys(ports))
 
-        print(bColors.Cyan + "Loading EC2 Instances IDs..." + bColors.ENDC)
+        print(bColors.Cyan + f"Loading EC2 Instances in security group {sg[1]} ..." + bColors.ENDC)
         cell_format = workbook.add_format()
         cell_format.set_align('center')
         cell_format.set_align('vcenter')
