@@ -15,7 +15,7 @@ AWS Trusted Advisor will warn you about risky security groups, but it doesn’t 
 + Listing EC2 instances associated with a specific security group
 + Verify security group rules against actual ports open on EC2 instance using port scanning
   + Port scanning is available through Python socket and Nmap (python-nmap)
-  + Nmap port scanning requires running this tool using root privilege 
+  + Nmap port scanning requires running this tool using root privilege (**Nmap is required for this feature to work.**)
 + Listing security groups attached to specific EC2 instance
 + Generating detailed XLSX reports per region that include: [Sample XLSX Report](https://github.com/SherifTalaat/AWS-SG-Analyzer/blob/b35ce776d57ac3284167c4081ae88cbf452fedb9/Sample%20Report.xlsx)
   + Summary of the security groups in the region
