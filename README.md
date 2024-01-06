@@ -1,5 +1,5 @@
 # AWS Security Group Analyzer
-A Python command-line tool to query Security Groups in AWS accounts and easily spot (and decide on) stale, risky, and misconfigured security groups.
+A Python command-line tool to query Security Groups in AWS accounts and easily spot (and decide on) stale, risky, and overly permissive security groups.
 
 AWS security groups are virtual firewalls that control the inbound and outbound traffic for EC2 instances and other AWS resources. They are essential for ensuring the security and compliance of cloud environments. However, if they are not configured properly, they can expose sensitive data, allow unauthorized access, and compromise the integrity of the cloud infrastructure. Misconfigured security groups can result from human errors, lack of visibility, or insufficient policies and procedures. 
 
